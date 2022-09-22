@@ -1,0 +1,22 @@
+//pangminghui add
+//in order to add baoundary to display and debug
+syntax = "proto2";
+
+package apollo.planning;
+
+import "modules/common/proto/pnc_point.proto";
+
+message Boundary{
+  optional double left_l = 1;
+  optional double right_l = 2;
+  optional apollo.common.PathPoint referencepoint = 3;
+}
+
+message PathBoundary2{
+  optional double start_s = 1;
+  optional double delta_s = 2;
+  repeated Boundary boundary = 3;
+  optional string label = 4;
+  optional string blocking_obstacle_id_ = 5;
+
+}

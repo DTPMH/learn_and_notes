@@ -1,0 +1,14 @@
+# Define all coms in DAG streaming.
+module_config {
+  module_library : "/apollo/bazel-bin/modules/planning/libplanning_timer_component.so"
+
+  timer_components {
+    class_name : "PlanningTimerComponent"
+    config {
+      name: "planning"
+      config_file_path:  "/apollo/modules/planning/conf/planning_config.pb.txt"
+      flag_file_path:  "/apollo/modules/planning/conf/planning.conf"
+      interval: 30
+    }
+  }
+}
