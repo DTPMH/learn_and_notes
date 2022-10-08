@@ -119,7 +119,7 @@ a.maxsize();							//返回最大可允许的向量元素数量值
 sort(a.begin(),a.end());                       //将a向量降序排列
 ```
 
-更多关于sort的知识，请见[跳转](# C++中的sort解析)
+更多关于sort的知识，请见[跳转](E:\梯梯\工作收获\xgd工作收获\learn_and_notes\学习提升\code学习\C++学习\c++中排序sort函数总结.md)
 
 ## 元素倒置
 
