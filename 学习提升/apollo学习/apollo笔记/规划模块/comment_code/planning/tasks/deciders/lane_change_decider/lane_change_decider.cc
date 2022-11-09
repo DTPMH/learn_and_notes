@@ -122,7 +122,7 @@ Status LaneChangeDecider::Process(
       // TODO(SHU): add an optimization_failure counter to enter
       // change_lane_failed status
       if (now - prev_status->timestamp() <
-          lane_change_decider_config.change_lane_fail_freeze_time()) {
+          lane_change_decider_config.change_lane_fail_freeze_time()) {//1.0s
         // RemoveChangeLane(reference_line_info);
         PrioritizeChangeLane(false, reference_line_info);
         ADEBUG << "freezed after failed";
@@ -134,7 +134,7 @@ Status LaneChangeDecider::Process(
     } else if (prev_status->status() ==
                ChangeLaneStatus::CHANGE_LANE_FINISHED) {//上一时刻变道成功，但是还有两条参看线说明仍需变道
       if (now - prev_status->timestamp() <
-          lane_change_decider_config.change_lane_success_freeze_time()) {
+          lane_change_decider_config.change_lane_success_freeze_time()) {//1.5s
         // RemoveChangeLane(reference_line_info);
         PrioritizeChangeLane(false, reference_line_info);
         ADEBUG << "freezed after completed lane change";

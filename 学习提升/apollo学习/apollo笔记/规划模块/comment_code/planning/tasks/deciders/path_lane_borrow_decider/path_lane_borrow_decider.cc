@@ -90,7 +90,7 @@ bool PathLaneBorrowDecider::IsNecessaryToBorrowLane(
     // Obstacle condition check for lane-borrowing:
     if (!IsBlockingObstacleFarFromIntersection(reference_line_info)) {//判断障碍物是否远离参考线中的特殊区域，远离true
       return false;
-    }//障碍物距离特殊区域很远不需要变道
+    }
     if (!IsLongTermBlockingObstacle()) {//有一直存在的障碍物
       return false;
     }

@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
 
 ### 约束函数
 
-path优化中的约束函数有三个部分：bound约束、初始点约束、连续性约束
+path优化中的约束函数有三个部分：**bound约束、初始点约束、连续性约束**
 
 #### bound约束
 
@@ -162,7 +162,7 @@ $$
 
 ![image-20221007232014617](piecewise_jerk_speed_nonlinear_optimizer.assets/image-20221007232014617.png)     
 
-3. 最后是每个$l$连续
+3. 最后是每个$s$连续
 
 ![image-20221007232036441](piecewise_jerk_speed_nonlinear_optimizer.assets/image-20221007232036441.png)
 

@@ -101,7 +101,7 @@ bool PathDecider::MakeStaticObstacleDecision(
         PerceptionObstacle_Type_Name(obstacle->Perception().type());
     ADEBUG << "obstacle_id[<< " << obstacle_id << "] type["
            << obstacle_type_name << "]";
-
+//跳过动态障碍物和虚拟障碍物
     if (!obstacle->IsStatic() || obstacle->IsVirtual()) {//非静态障碍物与虚拟障碍物不考虑
       continue;
     }
@@ -140,7 +140,8 @@ bool PathDecider::MakeStaticObstacleDecision(
     }
 
     // 0. IGNORE by default and if obstacle is not in path s at all.
-    ObjectDecisionType object_decision;//障碍物不在引导线上
+    //给处于path之外的障碍物添加忽略决策
+    ObjectDecisionType object_decision;//障碍物不在path上
     object_decision.mutable_ignore();
     const auto &sl_boundary = obstacle->PerceptionSLBoundary();
     if (sl_boundary.end_s() < frenet_path.front().s() ||
@@ -161,11 +162,13 @@ bool PathDecider::MakeStaticObstacleDecision(
     if (curr_l - lateral_radius > sl_boundary.end_l() ||//障碍物最小的点仍大于end_l，说明不在区域内，没影响
         curr_l + lateral_radius < sl_boundary.start_l()) {
       // 1. IGNORE if laterally too far away.
+      //障碍物在车的4m外，即隔了一个车道，则添加横向忽略决策
       path_decision->AddLateralDecision("PathDecider/not-in-l", obstacle->Id(),////将障碍物的id与decision放入path_decision中
                                         object_decision);
     } else if (sl_boundary.end_l() >= curr_l - min_nudge_l &&
                sl_boundary.start_l() <= curr_l + min_nudge_l) {
       // 2. STOP if laterally too overlapping.
+      //如果障碍物与车身重叠则设置停止决策
       *object_decision.mutable_stop() = GenerateObjectStopDecision(*obstacle);
 
       if (path_decision->MergeWithMainStop(
@@ -181,6 +184,7 @@ bool PathDecider::MakeStaticObstacleDecision(
                                                obstacle->Id(), object_decision);
       }
     } else {
+      //其余情况设置nudge决策
       // 3. NUDGE if laterally very close.
       if (sl_boundary.end_l() < curr_l - min_nudge_l) {  // &&
         // sl_boundary.end_l() > curr_l - min_nudge_l - 0.3) {//障碍物在他的右边，需要左推
@@ -212,7 +216,7 @@ ObjectStop PathDecider::GenerateObjectStopDecision(
   ObjectStop object_stop;
 
   double stop_distance = obstacle.MinRadiusStopDistance(
-      VehicleConfigHelper::GetConfig().vehicle_param());//停车最小距离
+      VehicleConfigHelper::GetConfig().vehicle_param());//停车最小距离：6m
   object_stop.set_reason_code(StopReasonCode::STOP_REASON_OBSTACLE);
   object_stop.set_distance_s(-stop_distance);
 

@@ -69,7 +69,7 @@ bool IsNonmovableObstacle(const ReferenceLineInfo& reference_line_info,
     }
     double delta_s = other_obstacle->PerceptionSLBoundary().start_s() -
                      obstacle.PerceptionSLBoundary().end_s();
-    if (delta_s < 0.0 || delta_s > kObstaclesDistanceThreshold) {
+    if (delta_s < 0.0 || delta_s > kObstaclesDistanceThreshold) {//15m
       continue;
     }
 

@@ -49,7 +49,7 @@ int main()
 {
     
     vector<int> a={5,20,25,45,68,21,55,36,100};
-    /*for(int i=0;i<10;i++)
+    for(int i=0;i<10;i++)
     {
         a.push_back(i);
     }

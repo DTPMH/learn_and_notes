@@ -16,7 +16,7 @@
 string str;
 string s(str);
 string s(str,2,5);               //从str中从s[2]开始赋值5个字符到s中，即将str[2]-str[6]初始化s
-string s("slslslsl"5);           //将c_char类型向量的前5个字符作为s的初值
+string s("slslslsl"，5);           //将c_char类型向量的前5个字符作为s的初值
 string s(5,c);                   //将5个c字符作为s的初值
 string s(str,2)；                //将str字符串的从2个元素开始到最后一个元素作为s的初值
 ```
@@ -155,7 +155,6 @@ str.push_back('s');
 str.pop_back();                     //删掉最后一个字符
 str.insert(0,'s');                  //在str[0]处插入s
 str.insert(0,3,'s');                //在str[0]出插入3个s
-str.insert(0,'s')
 str.insert(0,"string");             //在str[0]处插入字符串string
 str.insert(0,"string",0,5)；        //在str[0]处插入字符串string[0-5]构成的子串
     
@@ -219,7 +218,6 @@ int main()
 string str;
 str.replace(0,3,a);                      //将str中str[0]-str[2]的部分用字符串a替换
 str.replace(str.begin(),str.begin()+2,a);          //将str中str[0]-str[2]的部分用字符串a替换
-str.replace(0,3,a,1,2);                          //将str中str[0]-str[2]的部分用a字符串的a[1]-a[2]替换
 str.replace(0,3,a,1,2);                          //将str中str[0]-str[2]的部分用a字符串的a[1]-a[2]替换
 ```
 

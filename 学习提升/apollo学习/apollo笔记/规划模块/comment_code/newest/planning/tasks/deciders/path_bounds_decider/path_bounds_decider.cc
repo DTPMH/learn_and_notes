@@ -427,6 +427,7 @@ Status PathBoundsDecider::GeneratePullOverPathBound(
   // PathBoundsDebugString(*path_bound);
 
   // 2. Decide a rough boundary based on road boundary
+  //首先根据road的边界得到初始的path_boundary（两边剪去了半个车宽）
   if (!GetBoundaryFromRoads(reference_line_info, path_bound)) {
     const std::string msg =
         "Failed to decide a rough boundary based on road boundary.";
@@ -445,12 +446,14 @@ Status PathBoundsDecider::GeneratePullOverPathBound(
   }
 
   // 2. Update boundary by lane boundary for pull_over
+  //将左边界更新为lane_boundary
   UpdatePullOverBoundaryByLaneBoundary(reference_line_info, path_bound);
   // PathBoundsDebugString(*path_bound);
 
   // 3. Fine-tune the boundary based on static obstacles
   PathBound temp_path_bound = *path_bound;
   std::string blocking_obstacle_id;
+  //根据障碍物信息调整boundary，并提取出最近的阻挡lane静态障碍物的id
   if (!GetBoundaryFromStaticObstacles(reference_line_info.path_decision(),
                                       path_bound, &blocking_obstacle_id)) {
     const std::string msg =
@@ -478,7 +481,7 @@ Status PathBoundsDecider::GeneratePullOverPathBound(
     pull_over_status->Clear();
     pull_over_status->set_pull_over_type(pull_over_type);
     pull_over_status->set_plan_pull_over_path(true);
-
+    //搜索停车点
     std::tuple<double, double, double, int> pull_over_configuration;
     if (!SearchPullOverPosition(frame, reference_line_info, *path_bound,
                                 &pull_over_configuration)) {
@@ -1349,7 +1352,7 @@ void PathBoundsDecider::GetBoundaryFromLaneChangeForbiddenZone(
     lane_change_start_s = point_sl.s();
   } else {
     // TODO(jiacheng): train ML model to learn this.
-    lane_change_start_s = FLAGS_lane_change_prepare_length + adc_frenet_s_;
+    lane_change_start_s = FLAGS_lane_change_prepare_length + adc_frenet_s_;//80
 
     // Update the decided lane_change_start_s into planning-context.
     common::SLPoint lane_change_start_sl;
@@ -1413,14 +1416,17 @@ bool PathBoundsDecider::GetBoundaryFromStaticObstacles(
     std::string* const blocking_obstacle_id) {
   // Preprocessing.
   auto indexed_obstacles = path_decision.obstacles();
+  //首先对障碍物进行筛选排序：
+  //排除动态障碍物，虚拟障碍物，在车后的障碍物以及横纵向为忽略的障碍物
+  //之后对每个障碍物进行膨胀，前面膨胀2m,后面膨胀3m，左右分别膨胀0.4m,并将每个障碍物的表示成两条边，对这些边进行排序
   auto sorted_obstacles = SortObstaclesForSweepLine(indexed_obstacles);
   ADEBUG << "There are " << sorted_obstacles.size() << " obstacles.";
   double center_line = adc_frenet_l_;
   size_t obs_idx = 0;
   int path_blocked_idx = -1;
-  std::multiset<double, std::greater<double>> right_bounds;
+  std::multiset<double, std::greater<double>> right_bounds;//降序set，第一个为最大值
   right_bounds.insert(std::numeric_limits<double>::lowest());
-  std::multiset<double> left_bounds;
+  std::multiset<double> left_bounds;//升序set,第一个为最小值
   left_bounds.insert(std::numeric_limits<double>::max());
   // Maps obstacle ID's to the decided ADC pass direction, if ADC should
   // pass from left, then true; otherwise, false.
@@ -1430,6 +1436,7 @@ bool PathBoundsDecider::GetBoundaryFromStaticObstacles(
   std::unordered_map<std::string, bool> obs_id_to_sidepass_decision;
 
   // Step through every path point.
+  //遍历每个点
   for (size_t i = 1; i < path_boundaries->size(); ++i) {
     double curr_s = std::get<0>((*path_boundaries)[i]);
     // Check and see if there is any obstacle change:
@@ -1446,21 +1453,23 @@ bool PathBoundsDecider::GetBoundaryFromStaticObstacles(
                << "] curr_obstacle_l_min[" << curr_obstacle_l_min
                << "] curr_obstacle_l_max[" << curr_obstacle_l_max
                << "] center_line[" << center_line << "]";
-        if (std::get<0>(curr_obstacle) == 1) {
+        if (std::get<0>(curr_obstacle) == 1) {//这条边是该障碍物的起始边
           // A new obstacle enters into our scope:
           //   - Decide which direction for the ADC to pass.
           //   - Update the left/right bound accordingly.
           //   - If boundaries blocked, then decide whether can side-pass.
           //   - If yes, then borrow neighbor lane to side-pass.
+          //障碍物靠右，则更新boundary的右边界为障碍物的左边界
           if (curr_obstacle_l_min + curr_obstacle_l_max < center_line * 2) {
             // Obstacle is to the right of center-line, should pass from left.
-            obs_id_to_direction[curr_obstacle_id] = true;
+            obs_id_to_direction[curr_obstacle_id] = true;//
             right_bounds.insert(curr_obstacle_l_max);
           } else {
             // Obstacle is to the left of center-line, should pass from right.
             obs_id_to_direction[curr_obstacle_id] = false;
             left_bounds.insert(curr_obstacle_l_min);
           }
+          //两边剪去0.5的车宽，并更新中心线
           if (!UpdatePathBoundaryAndCenterLineWithBuffer(
                   i, *left_bounds.begin(), *right_bounds.begin(),
                   path_boundaries, &center_line)) {
@@ -1468,7 +1477,7 @@ bool PathBoundsDecider::GetBoundaryFromStaticObstacles(
             *blocking_obstacle_id = curr_obstacle_id;
             break;
           }
-        } else {
+        } else {//如果是障碍物的终止线，因此该障碍物对此无影响，因此需要删除该障碍物
           // An existing obstacle exits our scope.
           if (obs_id_to_direction[curr_obstacle_id]) {
             right_bounds.erase(right_bounds.find(curr_obstacle_l_max));
@@ -1478,6 +1487,7 @@ bool PathBoundsDecider::GetBoundaryFromStaticObstacles(
           obs_id_to_direction.erase(curr_obstacle_id);
         }
         // Update the bounds and center_line.
+        //更新boundary,以及中心线
         std::get<1>((*path_boundaries)[i]) = std::fmax(
             std::get<1>((*path_boundaries)[i]),
             *right_bounds.begin() + GetBufferBetweenADCCenterAndEdge());
@@ -1500,7 +1510,7 @@ bool PathBoundsDecider::GetBoundaryFromStaticObstacles(
 
         ++obs_idx;
       }
-    } else {
+    } else {//如果前面没有障碍物，则通过之前boundary更新中心线
       // If no obstacle change, update the bounds and center_line.
       std::get<1>((*path_boundaries)[i]) =
           std::fmax(std::get<1>((*path_boundaries)[i]),
@@ -1541,15 +1551,18 @@ std::vector<ObstacleEdge> PathBoundsDecider::SortObstaclesForSweepLine(
   // Go through every obstacle and preprocess it.
   for (const auto* obstacle : indexed_obstacles.Items()) {
     // Only focus on those within-scope obstacles.
+    //排除动态障碍物，虚拟障碍物，以及横纵向均为忽略的障碍物
     if (!IsWithinPathDeciderScopeObstacle(*obstacle)) {
       continue;
     }
     // Only focus on obstacles that are ahead of ADC.
+    //跳过在adc后面的障碍物
     if (obstacle->PerceptionSLBoundary().end_s() < adc_frenet_s_) {
       continue;
     }
     // Decompose each obstacle's rectangle into two edges: one at
     // start_s; the other at end_s.
+    //将障碍物分成两个边，其实边，终止边，
     const auto obstacle_sl = obstacle->PerceptionSLBoundary();
     sorted_obstacles.emplace_back(
         1, obstacle_sl.start_s() - FLAGS_obstacle_lon_start_buffer,
@@ -1562,6 +1575,7 @@ std::vector<ObstacleEdge> PathBoundsDecider::SortObstaclesForSweepLine(
   }
 
   // Sort.
+  //对障碍物的边进行排序
   std::sort(sorted_obstacles.begin(), sorted_obstacles.end(),
             [](const ObstacleEdge& lhs, const ObstacleEdge& rhs) {
               if (std::get<1>(lhs) != std::get<1>(rhs)) {
@@ -1833,7 +1847,9 @@ bool PathBoundsDecider::UpdatePathBoundaryWithBuffer(
 bool PathBoundsDecider::UpdatePathBoundaryAndCenterLineWithBuffer(
     size_t idx, double left_bound, double right_bound,
     PathBound* const path_boundaries, double* const center_line) {
+  //两边剪去0.5的车宽
   UpdatePathBoundaryWithBuffer(idx, left_bound, right_bound, path_boundaries);
+  //之后更新中心点
   *center_line = (std::get<1>((*path_boundaries)[idx]) +
                   std::get<2>((*path_boundaries)[idx])) /
                  2.0;

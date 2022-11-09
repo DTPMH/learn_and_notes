@@ -27,7 +27,7 @@
 
   **注意：第一帧状态是空的，因此在规划第一帧时会将状态置为变道成功(`CHANGE_LANE_FINISHED`)**
 
-* 若当前引导线是变道的引导线，则根据目前是否能安全变道，对`prev_status->set_is_clear_to_change_lane`赋值
+* 若当前引导线是变道的引导线，则根据目前是否能安全变道，对`prev_status->set_is_clear_to_change_lane`赋值，在path_bound中会用到
   ```C++
     if (current_reference_line_info->IsChangeLanePath()) {
       prev_status->set_is_clear_to_change_lane(
@@ -48,7 +48,7 @@
         }
     ```
 
-  * 若是上一帧状态处于变道状态，且上一步处于变道中，则说明变道结束
+  * 若是上一帧状态处于变道状态，则说明变道结束
     ```C++
     else if (prev_status->status() == ChangeLaneStatus::IN_CHANGE_LANE) {
           UpdateStatus(now, ChangeLaneStatus::CHANGE_LANE_FINISHED, path_id);
