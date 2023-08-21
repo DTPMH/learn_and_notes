@@ -168,14 +168,74 @@ _斜体文字_
 # 数学公式
 
 输入`$$`后输入latex渲染的公式符号，例子：
+$$
+{\LARGE
+\color{blue}
+\begin{align}
+x &= 输入蓝色超大字体公式，加入公式序号 \\
+y &= 输入红色超大字体公式，加入公式序号 \\
+z &= 需要对齐等号
+\end{align}
+}
+$$
+
+
+## 显示公式字体的颜色
+
 ```
-$$
-\mathbf{V}_1 \times \mathbf{V}_2 =  \begin{vmatrix} 
-\mathbf{i} & \mathbf{j} & \mathbf{k} \\
-\frac{\partial X}{\partial u} &  \frac{\partial Y}{\partial u} & 0 \\
-\frac{\partial X}{\partial v} &  \frac{\partial Y}{\partial v} & 0 \\
-\end{vmatrix}
-$$
+{\color{Blue}   }      //蓝色字体
+{\color{Red}    }      //红色字体
+{\color{Green}  }      //绿色字体
+{\color{Purple} }      //紫色字体
+{\color[RGB]{0,0,0} }  //自定义颜色  
+```
+
+## 插入分数
+
+```
+\frac{}{}
+```
+
+## 插入微分
+
+```
+\dot{}
+\ddot{}
+\dddot{}
+```
+
+## 插入次方
+
+```
+^{}
+```
+
+## 插入矩阵
+
+3*3加中括号矩阵
+
+```
+{
+\begin{bmatrix}
+ &  & \\ 
+ &  & \\ 
+ &  &
+\end{bmatrix}
+}
+```
+
+## 公式换行+对齐
+
+```
+ \\    换行
+ &     对齐
+```
+
+## 开放根
+
+```
+\sqrt[2]{x}
+\sqrt{x}
 ```
 
 # 图片
